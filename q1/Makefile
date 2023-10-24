@@ -16,8 +16,6 @@ exp1: infections_exp1
 exp2: infections_exp2
 	./infections_exp2
 
-exp3: infections_exp3
-	./infections_exp3
 
 infections_module.o: infections_module.f90
 	$(FC) $(FFLAGS) -o infections_module.o -c infections_module.f90
@@ -37,9 +35,6 @@ infections_exp1: infections_exp1.o infections_module.o
 infections_exp2: infections_exp2.o infections_module.o
 	$(FC) $(FFLAGS) -o infections_exp2 infections_exp2.o infections_module.o 
 
-infections_exp3: infections_exp3.o infections_module.o
-	$(FC) $(FFLAGS) -o infections_exp3 infections_exp3.o infections_module.o 
-
 
 clean:
-	@ rm -f infections_exp1.o infections_module.o *.mod infections_exp1
+	@ rm -f *.o *.mod infections_exp1 infections_exp2
