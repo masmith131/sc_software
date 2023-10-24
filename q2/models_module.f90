@@ -1,5 +1,6 @@
 module models 
 
+    use solver_gfortran 
     implicit none 
     contains
     
@@ -51,9 +52,20 @@ module models
         dfdx(5,2) = alpha 
         dfdx(5,3) = alpha
 
-
-        
     end subroutine jacob
+
+    subroutine newton(param, xs, T, N, xs1) 
+        real param(5), xs(5), xs1(5), T, dfdx(5,5)
+        integer N, i
+        call jacob(param,xs, dfdx)
+        dfdx = dfdx * T/N
+        do i = 1,5
+            dfdx(i,i) = dfdx(i,i) -1
+        enddo
+
+
+
+    end subroutine 
 
     ! subroutine: forward
     ! computes values of vector x at time k+1 thanks to values at time k
