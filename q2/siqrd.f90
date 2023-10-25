@@ -4,7 +4,7 @@ program siqrd
 
     ! following string contains the name of the method we will be using 
     ! f = forward euler, b = backward euler, h= heun
-    character, parameter :: m = 'h'
+    character, parameter :: m = 'f'
     ! N +1:  number of grid points in time interval [0,T]
     integer, parameter:: N = 150
     ! T: simulation horizon 

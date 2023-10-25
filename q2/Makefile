@@ -11,14 +11,14 @@ FFLAGS=$(FFLAGS_$(FC))
 all: siqrd 
 	./siqrd
 
-models_module.o: models_module.f90
+models_module.o: models_module.f90 solver_gfortran.mod
 	$(FC) $(FFLAGS) -o models_module.o -c models_module.f90
 
 siqrd.o: siqrd.f90 models_module.o
 	$(FC) $(FFLAGS) -o siqrd.o -c siqrd.f90
 
 siqrd: siqrd.o models_module.o
-	$(FC) $(FFLAGS) -o siqrd siqrd.o models_module.o 
+	$(FC) $(FFLAGS) -o siqrd siqrd.o models_module.o solver_gfortran.o
 
 clean:
-	@ rm -f *.o *.mod siqrd 
+	@ rm -f siqrd.o models_module.o models.mod siqrd 

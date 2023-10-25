@@ -28,9 +28,14 @@ module models
     end subroutine func 
 
 
-    subroutine jacob(param, xk, dfdx)
-        real beta, mu, gamma, alpha, delta, param(5), xk(5), dfdx(5,5)
+    ! subroutine: jacob
+    ! computes the jacobian of function f(t) = (s'(t),i'(t),q'(t),r'(t),d'(t))
 
+    subroutine jacob(param, xk, dfdx)
+        ! param = (beta, mu, gamma, alpha, delta), parameters of siqrd model
+        ! xk = (s(t), i(t), q(t), r(t), d(t)), point at which we want to evalutate the jacobian
+        ! dfdx: 5x5 matrix that will stock the jacobian 
+        real beta, mu, gamma, alpha, delta, param(5), xk(5), dfdx(5,5)
         beta = param(1)
         mu = param(2)
         gamma = param(3)
@@ -38,6 +43,7 @@ module models
         delta = param(5)
 
         dfdx = 0.0
+        ! computing all non zero entries of the jacobian 
         dfdx(1,1) = - beta*xk(2) *((xk(2)+xk(4))/(xk(1)+xk(2)+xk(4))**2)
         dfdx(1,2) = - beta*xk(1) *((xk(1) + xk(4))/(xk(1)+xk(2)+xk(4))**2)
         dfdx(1,4) = (beta*xk(1)*xk(2))/((xk(1)+xk(2)+xk(4))**2) + mu
@@ -54,15 +60,38 @@ module models
 
     end subroutine jacob
 
-    subroutine newton(param, xs, T, N, xs1) 
-        real param(5), xs(5), xs1(5), T, dfdx(5,5)
+    ! subroutine: newton 
+    ! computes one step of the newton method 
+    subroutine newton(param, xs, T, N, xs1, xk, fx) 
+        ! xs corresponds to x_(k+1)^(s) 
+        ! xs1 corresponds to x_(k+1)^(s)
+        ! inv corresponds to the second term of the newton method 
+        real param(5), xs(5), xs1(5), T, xk(5),fx(5), dfdx(5,5), inv(5,5)
         integer N, i
-        call jacob(param,xs, dfdx)
-        dfdx = dfdx * T/N
-        do i = 1,5
+        
+        !computing the second term 
+        call jacob(param,xs, dfdx)  ! compute the jacobian 
+        dfdx = dfdx * T/N           ! scale the jacobian 
+        do i = 1,5                  ! substract it the identity
             dfdx(i,i) = dfdx(i,i) -1
         enddo
 
+        ! inverting 
+        do i = 1,5
+            inv(:,i) = 0.0
+            inv(i,i) = 1.0
+            call solve(dfdx, inv(:,i))
+        enddo
+
+        ! computing the third term 
+        do i = 1,5
+            xk(i) = xk(i) + T/N *fx(i) - xs(i)
+        enddo
+
+        ! multiplying the second and third term 
+
+        ! final computation 
+        xs1 = 0.0
 
 
     end subroutine 
@@ -99,4 +128,4 @@ module models
     end subroutine 
 
 
-end module 
+end module models
