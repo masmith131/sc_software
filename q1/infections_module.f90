@@ -11,7 +11,7 @@ module infections
         integer, parameter :: sp = kind(1.0) ! single precision 
         integer, parameter :: dp = kind(1.0d0)  ! double precision 
         ! following line to change for different precision 
-        integer, parameter :: select_p= dp ! set select_p to the desired precision (sp or dp)
+        integer, parameter :: select_p=sp ! set select_p to the desired precision (sp or dp)
         real(select_p) :: r, d, id
         integer i0 
         id = (1+r)**d * i0 ! computing infections according to the model 

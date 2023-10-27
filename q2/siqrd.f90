@@ -1,10 +1,10 @@
 program siqrd
 
-    use models 
+    use siqrd_solver 
 
     ! following string contains the name of the method we will be using 
     ! f = forward euler, b = backward euler, h= heun
-    character, parameter :: m = 'f'
+    character, parameter :: m = 'b'
     ! N +1:  number of grid points in time interval [0,T]
     integer, parameter:: N = 150
     ! T: simulation horizon 
@@ -40,7 +40,7 @@ program siqrd
         elseif(m == 'h') then 
             call heun(input(:5),sol(i-1,:), T, N, sol(i,:))
         elseif(m == 'b') then 
-            print *, "BE not yet implemented ! "
+            call backward(input(:5), sol(i-1, :), T, N, sol(i,:))
             exit
         else 
             print *, "method m is not recognized"
