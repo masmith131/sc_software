@@ -1,46 +1,44 @@
 program siqrd
-
     use siqrd_solver 
+    implicit none 
 
-    ! following string contains the name of the method we will be using 
-    ! f = forward euler, b = backward euler, h= heun
-    character, parameter :: m = 'b'
-    ! N +1:  number of grid points in time interval [0,T]
-    integer, parameter:: N = 150
-    ! T: simulation horizon 
-    real, parameter :: T = 30
-    ! input: will contain what is read from 'parameters.in'
-    ! xk = (s(t), i(t), q(t), r(t), d(t))
-    ! grid: array of size N+1 containg grid points on [0,T]
-    ! step: time step between grid points
-    real :: input(7), grid(N+1), step, sol(N+1,5)
-    integer i,j 
+    ! following character contains the name of the method we will be using 
+    character, parameter :: m = 'h' ! f = forward euler, b = backward euler, h= heun
+
+    real, parameter :: step = T/N !time step between grid points
+    real, dimension(N+1) :: grid !array of size N+1 containg grid points on [0,T]
+    real, dimension(7) :: input ! stores the input read from 'parameters.in'
+    real, dimension(5,N+1) :: sol ! stores the solution at each time step 
+    integer i,j
+
+    ! fill in array containg grid points 
+    grid(1) = 0.0
+    do i = 2, N+1
+        grid(i) = grid(i-1) + step
+    enddo
 
     ! getting parameters and s0, i0 from the input file 
     open(unit = 32,file = 'parameters.in')
     read(32,*) input
     close(unit = 32)
 
-    sol(1,:) = 0.0
-    sol(1,1) = input(6)
-    sol(1,2) = input(7)
+    ! xk = (s(t), i(t), q(t), r(t), d(t)), corresponds to one row of sol 
+    ! filling in x0
+    sol(:,1) = 0.0
+    sol(1,1) = input(6) ! s0
+    sol(2,1) = input(7) ! i0
 
-    ! fill in array containg grid points 
-    step = T/N
-    grid(1) = 0.0
-    do i = 2, N+1
-        grid(i) = grid(i-1) + step
-    enddo
+    ! setting parameters for the numerical method method 
+    call setting_parameters(input(:5))
 
-    
+    ! calling relevant method for every time step 
     do i = 2,N+1
         if(m == 'f') then 
-            call forward(input(:5), sol(i-1,:), T, N, sol(i,:))
-
+            call forward(sol(:,i-1),sol(:,i))
         elseif(m == 'h') then 
-            call heun(input(:5),sol(i-1,:), T, N, sol(i,:))
+            call heun(sol(:,i-1), sol(:,i))
         elseif(m == 'b') then 
-            call backward(input(:5), sol(i-1, :), T, N, sol(i,:))
+            call backward(sol(:,i-1),sol(:,i))
             exit
         else 
             print *, "method m is not recognized"
@@ -48,9 +46,9 @@ program siqrd
         endif
     enddo
 
-
-    do i = 1, N+1
-        do j = 1, 5
+    ! printing the solution vector for every time step 
+    do j = 1, N+1
+        do i = 1, 5
             write(*, '(es12.5, 1x, a)', advance='no') sol(i,j), " "
         enddo
         print *

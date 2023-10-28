@@ -4,11 +4,7 @@ program infections_exp1
 
     implicit none 
 
-    ! we define single and double precision to easily switch between both 
-    integer, parameter :: sp = kind(1.0) ! single precision 
-    integer, parameter :: dp = kind(1.0d0)  ! double precision 
-    ! following line to change for different precision 
-    integer, parameter :: select_p= sp ! set select_p to the desired precision (sp or dp)
+    ! use precision select_p defines in the module infections
     real(select_p) :: r, d, result
     integer i
 

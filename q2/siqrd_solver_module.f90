@@ -2,43 +2,54 @@ module siqrd_solver
 
     use solver_gfortran 
     implicit none 
-    contains
-    
-    ! subroutine: func 
-    ! computes the time derivatives of s,i,q,r,d
-    ! based on the SIQRD models 
-    ! func computes vector fx based on the 5 parameters and 5 functions of time
-    subroutine func(param, xk, fx)
-        real beta, mu, gamma, alpha, delta, param(5), xk(5), fx(5)
-        ! xk = (s(t), i(t), q(t), r(t), d(t))
-        ! param = (beta, mu, gamma, alpha, delta)
-        beta = param(1)
-        mu = param(2)
-        gamma = param(3)
-        alpha = param(4)
-        delta = param(5)
 
+    real :: beta, mu, gamma, alpha, delta
+    real, parameter, public :: T = 30.0 ! simulation horizon 
+    integer, parameter, public  :: N = 150 ! N +1:  number of grid points in time interval [0,T]
+
+    contains
+
+    ! ===============================================================================================
+    ! subroutine: setting_parameters
+    ! sets the global varibales that correspond to parameters of the siqrd model 
+    ! ===============================================================================================
+    subroutine setting_parameters(param)
+        real, intent(in) :: param(5)
+        ! param = (beta, mu, gamma, alpha, delta)
+        beta = param(1)  ! infection rate 
+        mu = param(2)    ! the rate at which immune people become again susceptible
+        gamma = param(3) ! recovery rate 
+        alpha = param(4) ! rate at which infected people get tested
+        delta = param(5) ! death rate 
+    end subroutine setting_parameters
+    
+    ! ===============================================================================================
+    ! subroutine: func 
+    ! computes the time derivatives of s,i,q,r,d, so the vector ! fx = (s'(t),i'(t),q'(t),r'(t),d'(t))
+    ! based on the SIQRD models 
+    ! ================================================================================================
+    subroutine func(xk, fx)
+        real, dimension(5), intent(in) :: xk ! xk = (s(t), i(t), q(t), r(t), d(t)), point at which evalutate the function
+        real, dimension(5), intent(out) :: fx ! to store output of time derivates of the 5 functions at xk
+
+        ! xk = (s(t), i(t), q(t), r(t), d(t))
         ! fx = (s'(t),i'(t),q'(t),r'(t),d'(t))
         fx(1) = -beta *(xk(2)/(xk(1)+ xk(2)+ xk(4)))* xk(1)+ mu*xk(4)
         fx(2) = (beta* xk(1)/(xk(1) + xk(2) + xk(4)) - gamma - delta - alpha) * xk(2)
         fx(3) = delta* xk(2) - (gamma + alpha)*xk(3)
         fx(4) = gamma* (xk(2) + xk(3)) - mu *xk(4)
         fx(5) = alpha* (xk(2) + xk(3))
+
     end subroutine func 
 
-
+    ! ===============================================================================================
     ! subroutine: jacob
     ! computes the jacobian of function f(t) = (s'(t),i'(t),q'(t),r'(t),d'(t))
-    subroutine jacob(param, xk, dfdx)
-        ! param = (beta, mu, gamma, alpha, delta), parameters of siqrd model
-        ! xk = (s(t), i(t), q(t), r(t), d(t)), point at which we want to evalutate the jacobian
-        ! dfdx: 5x5 matrix that will stock the jacobian 
-        real beta, mu, gamma, alpha, delta, param(5), xk(5), dfdx(5,5)
-        beta = param(1)
-        mu = param(2)
-        gamma = param(3)
-        alpha = param(4)
-        delta = param(5)
+    ! ===============================================================================================
+
+    subroutine jacob(xk, dfdx)
+        real, dimension(5), intent(in) :: xk ! xk = (s(t), i(t), q(t), r(t), d(t)), point at which evalutate the jacobian
+        real , dimension(5,5), intent(out) :: dfdx  ! dfdx: 5x5 matrix that will store the jacobian 
 
         dfdx = 0.0
         ! computing all non zero entries of the jacobian 
@@ -57,16 +68,17 @@ module siqrd_solver
         dfdx(5,3) = alpha
     end subroutine jacob
 
-
+    ! ==================================================================================================
     ! subroutine: newton 
     ! computes one step of the newton method 
-    subroutine newton(param, xk1, T, N,xk)
-        ! xk corresponds to x_k
+    ! ==================================================================================================
+    subroutine newton(xk, xk1)
         ! xk1 corresponds to x_(k+1)^(s)
-        real T 
-        real, dimension(5) :: param, xk1, xk, fx, incr
-        real, dimension(5,5) :: dfdx, Id
-        integer N, i
+        real, dimension(5), intent(in) :: xk ! x_k the solution at time step k 
+        real, dimension(5), intent(inout):: xk1 ! x_(k+1)^(s) initial guess for x_k+1
+        real, dimension(5) :: fx, incr ! fx will store f(xk) and incr the value we substrat from x_(k+1)^(s) to get x_(k+1)^(s+1)
+        real, dimension(5,5) :: dfdx, Id !dfdx will contain the matrix term and Id the identity 5 by 5 
+        integer i
         
         !Identity Matrix
         do i = 1,5
@@ -74,64 +86,72 @@ module siqrd_solver
         enddo
 
         !computing the second term (before inversion)
-        call jacob(param,xk1, dfdx)  ! compute the jacobian 
+        call jacob(xk1, dfdx)  ! compute the jacobian 
         dfdx = dfdx * T/N           ! scale the jacobian 
         dfdx = dfdx - Id            ! substract it the identity
 
-        ! computing the third term and putting it in xk
-        call func(param,xk1, fx)
+        ! computing the third term 
+        call func(xk1, fx)
         incr = xk + T/N * fx - xk1
 
         ! solving (dfdx)x = incr to obtain x = (dfdx)^-1 * incr
         call solve(dfdx,incr)
         
         ! final computation 
-        xk1 = xk1 - incr
+        xk1 = xk1 - incr ! now xk1 contains x_(k+1)^(s+1)
 
     end subroutine 
 
+    ! ===========================================================================
     ! subroutine: forward
     ! computes values of vector x at time k+1 thanks to values at time k
     ! following Euler's forward scheme 
-    subroutine forward(param, xk, T, N, xk1)
-        real param(5), xk(5), T, xk1(5), fx(5)
-        integer i,N
-        call func(param, xk, fx)
-        do i = 1,5
-            xk1(i) = xk(i) + T/N * fx(i)            
-        enddo
+    ! ============================================================================
+    subroutine forward(xk,xk1)
+        real, dimension(5), intent(in) :: xk ! x_k the solution at time step k 
+        real, dimension(5), intent(out) :: xk1 !xk1 the solution at time step k+1
+        real, dimension(5) :: fx ! f(x_k)
+        call func(xk, fx)
+        xk1 = xk + T/N * fx
     end subroutine 
 
-
-    subroutine heun(param, xk, T, N, xk1) 
-        real param(5), xk(5), T, xk1(5), fx(5), xkt(5), fxt(5)
-        integer i,N
-        call func(param, xk, fx)
-        do i = 1,5
-            xkt(i) = xk(i) + T/N*fx(i)
-        enddo
-
-        call func(param, xkt, fxt)
-        do i = 1,5
-            xk1(i) = xk(i) + T/N * (0.5 * fx(i) + 0.5 * fxt(i))     
-        enddo
+    ! ===========================================================================
+    ! subroutine: heun
+    ! computes values of vector x at time k+1 thanks to values at time k
+    ! following Heun's scheme 
+    ! ============================================================================    
+    subroutine heun(xk, xk1) 
+        real, dimension(5), intent(in) :: xk ! x_k the solution at time step k 
+        real, dimension(5), intent(out) :: xk1 !xk1 the solution at time step k+1
+        real, dimension(5) ::  fx, xkt, fxt! f(x_k), x_k + T/N f(x_k), f(x_k + T/N f(x_k))
+        call func(xk, fx)
+        xkt = xk + T/N*fx
+        call func(xkt, fxt)
+        xk1 = xk + T/N * (0.5 * fx + 0.5 * fxt)     
     end subroutine 
 
-    subroutine backward(param, xk, T, N, xk1)
-        real param(5), xk(5), T, xk1(5), fxk1(5), err
-        integer i,N, max_it
-        max_it = 200
+    ! ===========================================================================
+    ! subroutine: backward
+    ! computes values of vector x at time k+1 thanks to values at time k
+    ! following Euler's backward scheme 
+    ! ============================================================================  
+    subroutine backward(xk,xk1)
+        real, dimension(5), intent(in) :: xk ! x_k the solution at time step k 
+        real, dimension(5), intent(out) :: xk1 !xk1 the solution at time step k+1
+        real, dimension(5) :: fxk1(5) ! f(x_k+1^(s+1))
+        real err ! contains the backward error 
+        integer, parameter :: max_it = 200 !maximum number of iterations of newton for one step
+        integer i
 
         ! initial guess set to xk
-        xk1 = (/80.0, 0.0, 0.0, 20.0, 5.0/)
+        xk1 = xk 
         do i = 1,max_it 
-            call newton(param,xk1,T,N,xk)
+            call newton(xk,xk1)
             ! computing backward error 
-            call func(param, xk1, fxk1)
+            call func(xk1, fxk1)
             err = norm2(xk - T/N * fxk1 - xk1)
             if (err < 0.1) exit 
         enddo 
-
     end subroutine 
 
 
