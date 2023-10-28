@@ -5,8 +5,8 @@ program infections_exp1
     implicit none 
 
     ! use precision select_p defines in the module infections
-    real(select_p) :: r, d, result
-    integer i
+    real(select_p) :: r, d, result ! rate, number of days, final result 
+    integer i ! number of initial infections
 
     ! we prompt the user for the 3 parameters of the model 
     print *,'Enter the number of initial infections'
