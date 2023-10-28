@@ -47,3 +47,48 @@
         xk1 = xk1 - incr
 
     end subroutine 
+
+    subroutine backward(xk, xk1)
+        real, dimension(5), intent(in) :: xk ! x_k the solution at time step k 
+        real, dimension(5), intent(out) :: xk1 !xk1 the solution at time step k+1
+        real, dimension(5) :: fx, res, deltax
+        real, dimension(5,5) :: J, I
+        integer :: iter, max_iter
+        real :: tol, error
+        
+        max_iter = 100
+        tol = 1.0e-6
+        I = 0.0
+        I(1,1) = 1.0
+        I(2,2) = 1.0
+        I(3,3) = 1.0
+        I(4,4) = 1.0
+        I(5,5) = 1.0
+        
+        ! Initial guess for xk1
+        xk1 = xk
+        
+        do iter = 1, max_iter
+            call func(xk1, fx)
+            call jacob(xk1, J)
+            
+            ! Compute the residual
+            res = xk + T/N * fx - xk1
+            
+            ! Newton's step
+            ! solve for deltax: (I - T/N * J) * deltax = res
+            J = I - T/N * J
+            call solve(J, res)
+            deltax = res
+            
+            ! Update the estimate
+            xk1 = xk1 + deltax
+            
+            ! Check convergence
+            error = sum(abs(deltax))
+            if (error < tol) exit
+        end do
+    end subroutine
+    
+
+    

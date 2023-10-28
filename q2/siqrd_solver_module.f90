@@ -55,7 +55,7 @@ module siqrd_solver
         ! computing all non zero entries of the jacobian 
         dfdx(1,1) = - beta*xk(2) *((xk(2)+xk(4))/(xk(1)+xk(2)+xk(4))**2)
         dfdx(1,2) = - beta*xk(1) *((xk(1) + xk(4))/(xk(1)+xk(2)+xk(4))**2)
-        dfdx(1,4) = (-beta*xk(1)*xk(2))/((xk(1)+xk(2)+xk(4))**2) + mu
+        dfdx(1,4) = (beta*xk(1)*xk(2))/((xk(1)+xk(2)+xk(4))**2) + mu
         dfdx(2,1) = beta*xk(2) *((xk(2)+xk(4))/(xk(1)+xk(2)+xk(4))**2)
         dfdx(2,2) = beta*xk(1) *((xk(1) + xk(4))/(xk(1)+xk(2)+xk(4))**2) - gamma - delta - alpha
         dfdx(2,4) = (-beta*xk(1)*xk(2))/((xk(1)+xk(2)+xk(4))**2)
@@ -67,40 +67,6 @@ module siqrd_solver
         dfdx(5,2) = alpha 
         dfdx(5,3) = alpha
     end subroutine jacob
-
-    ! ==================================================================================================
-    ! subroutine: newton 
-    ! computes one step of the newton method 
-    ! ==================================================================================================
-    subroutine newton(xk, xk1)
-        ! xk1 corresponds to x_(k+1)^(s)
-        real, dimension(5), intent(in) :: xk ! x_k the solution at time step k 
-        real, dimension(5), intent(inout):: xk1 ! x_(k+1)^(s) initial guess for x_k+1
-        real, dimension(5) :: fx, incr ! fx will store f(xk) and incr the value we substrat from x_(k+1)^(s) to get x_(k+1)^(s+1)
-        real, dimension(5,5) :: dfdx, Id !dfdx will contain the matrix term and Id the identity 5 by 5 
-        integer i
-        
-        !Identity Matrix
-        do i = 1,5
-            Id(i,i) = 1.0
-        enddo
-
-        !computing the second term (before inversion)
-        call jacob(xk1, dfdx)  ! compute the jacobian 
-        dfdx = dfdx * T/N           ! scale the jacobian 
-        dfdx = dfdx - Id            ! substract it the identity
-
-        ! computing the third term 
-        call func(xk1, fx)
-        incr = xk + T/N * fx - xk1
-
-        ! solving (dfdx)x = incr to obtain x = (dfdx)^-1 * incr
-        call solve(dfdx,incr)
-        
-        ! final computation 
-        xk1 = xk1 - incr ! now xk1 contains x_(k+1)^(s+1)
-
-    end subroutine 
 
     ! ===========================================================================
     ! subroutine: forward
@@ -137,20 +103,46 @@ module siqrd_solver
     ! ============================================================================  
     subroutine backward(xk,xk1)
         real, dimension(5), intent(in) :: xk ! x_k the solution at time step k 
-        real, dimension(5), intent(out) :: xk1 !xk1 the solution at time step k+1
-        real, dimension(5) :: fxk1(5) ! f(x_k+1^(s+1))
-        real err ! contains the backward error 
-        integer, parameter :: max_it = 200 !maximum number of iterations of newton for one step
+        real, dimension(5), intent(out) :: xk1!xk1 the solution at time step k+1
+        real, dimension(5) :: fx(5), be(5), prod(5) ! f(x_k+1^(s+1)), corresponds to the last term of newton or the backward error 
+        real, dimension(5,5) :: dfdx, Id !dfdx will contain the matrix term and Id the identity 5 by 5 
+
+        integer, parameter :: max_it = 100 !maximum number of iterations of newton for one step
         integer i
+
+        !Identity Matrix
+        do i = 1,5
+            Id(i,i) = 1.0
+        enddo
 
         ! initial guess set to xk
         xk1 = xk 
+
+        ! iterations of newton's method 
         do i = 1,max_it 
-            call newton(xk,xk1)
-            ! computing backward error 
-            call func(xk1, fxk1)
-            err = norm2(xk - T/N * fxk1 - xk1)
-            if (err < 0.1) exit 
+            if(i == max_it) print *, "Warning the newton method reached its maximum number of iterations !"
+
+            !computing the second term (before inversion)
+            call jacob(xk1, dfdx)  ! compute the jacobian 
+            dfdx = dfdx * T/N           ! scale the jacobian 
+            dfdx = dfdx - Id            ! substract it the identity
+
+            ! computing the third term 
+            call func(xk1, fx)
+            be = xk + T/N * fx - xk1
+            prod = be 
+            
+            ! solving (dfdx)x = prod to obtain x = (dfdx)^-1 * prod and result x will be in prod 
+            call solve(dfdx,prod)
+        
+            ! final computation 
+            xk1 = xk1 - prod ! now xk1 contains x_(k+1)^(s+1)
+            
+            print *, xk1 
+
+            !backward error stopping criteria
+            if(norm2(be) < 1.0e-6) exit
+
         enddo 
     end subroutine 
 

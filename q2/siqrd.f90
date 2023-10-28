@@ -3,7 +3,7 @@ program siqrd
     implicit none 
 
     ! following character contains the name of the method we will be using 
-    character, parameter :: m = 'h' ! f = forward euler, b = backward euler, h= heun
+    character, parameter :: m = 'b' ! f = forward euler, b = backward euler, h= heun
 
     real, parameter :: step = T/N !time step between grid points
     real, dimension(N+1) :: grid !array of size N+1 containg grid points on [0,T]
@@ -32,12 +32,15 @@ program siqrd
     call setting_parameters(input(:5))
 
     ! calling relevant method for every time step 
-    do i = 2,N+1
+    do i = 2, 4! N+1
         if(m == 'f') then 
             call forward(sol(:,i-1),sol(:,i))
         elseif(m == 'h') then 
             call heun(sol(:,i-1), sol(:,i))
         elseif(m == 'b') then 
+            print *, "iteration",i
+            print *, sol(:,i-1)
+            print *, sol(:,i)
             call backward(sol(:,i-1),sol(:,i))
             exit
         else 
@@ -47,7 +50,7 @@ program siqrd
     enddo
 
     ! printing the solution vector for every time step 
-    do j = 1, N+1
+    do j = 1, 4 ! N+1
         do i = 1, 5
             write(*, '(es12.5, 1x, a)', advance='no') sol(i,j), " "
         enddo
