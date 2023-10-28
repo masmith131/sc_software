@@ -120,7 +120,10 @@ module siqrd_solver
 
         ! iterations of newton's method 
         do i = 1,max_it 
-            if(i == max_it) print *, "Warning the newton method reached its maximum number of iterations !"
+            if(i == max_it) then 
+                print *, "Warning the newton method reached its maximum number of iterations !"
+                stop 
+            endif
 
             !computing the second term (before inversion)
             call jacob(xk1, dfdx)  ! compute the jacobian 
@@ -137,11 +140,9 @@ module siqrd_solver
         
             ! final computation 
             xk1 = xk1 - prod ! now xk1 contains x_(k+1)^(s+1)
-            
-            print *, xk1 
 
             !backward error stopping criteria
-            if(norm2(be) < 1.0e-6) exit
+            if(norm2(be) < 1.0e-6) return 
 
         enddo 
     end subroutine 

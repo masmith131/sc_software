@@ -32,17 +32,14 @@ program siqrd
     call setting_parameters(input(:5))
 
     ! calling relevant method for every time step 
-    do i = 2, 4! N+1
+    do i = 2, N+1
         if(m == 'f') then 
             call forward(sol(:,i-1),sol(:,i))
         elseif(m == 'h') then 
             call heun(sol(:,i-1), sol(:,i))
         elseif(m == 'b') then 
             print *, "iteration",i
-            print *, sol(:,i-1)
-            print *, sol(:,i)
             call backward(sol(:,i-1),sol(:,i))
-            exit
         else 
             print *, "method m is not recognized"
             exit
@@ -50,7 +47,8 @@ program siqrd
     enddo
 
     ! printing the solution vector for every time step 
-    do j = 1, 4 ! N+1
+    do j = 1, N+1
+        write(*,'(es12.5, 1x, a)',advance='no') grid(j), " "
         do i = 1, 5
             write(*, '(es12.5, 1x, a)', advance='no') sol(i,j), " "
         enddo

@@ -1,0 +1,11 @@
+WHAT IS LEFT TO DO 
+q1: double check values and finish comment
+q2: review answer and think about if it is better to change func and jacob to functions
+q3: review answer 
+q4: ++ explain well maybe include a few tests in the code 
+q5: review answer 
+q6: write comment
+q7: review answer 
+
+++ understand why sometimes but not always ok for euler 
+++ revise all functions and subroutines of siqrd_solver
