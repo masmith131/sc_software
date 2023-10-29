@@ -1,4 +1,4 @@
-FC=ifort
+FC=gfortran
 
 all: infections_exp1 infections_exp2 
 

@@ -90,6 +90,11 @@
         end do
     end subroutine
     
+    fx(1) = -beta *(xk(2)/(xk(1)+ xk(2)+ xk(4)))* xk(1)+ mu*xk(4)
+    fx(2) = (beta* xk(1)/(xk(1) + xk(2) + xk(4)) - gamma - delta - alpha) * xk(2)
+    fx(3) = delta* xk(2) - (gamma + alpha)*xk(3)
+    fx(4) = gamma* (xk(2) + xk(3)) - mu *xk(4)
+    fx(5) = alpha* (xk(2) + xk(3))
 
     1.00000E+02   5.00000E+00   0.00000E+00   0.00000E+00   0.00000E+00  
     9.36103E+01   3.55929E+00  -2.40641E-13   7.11857E+00   7.11857E-01  

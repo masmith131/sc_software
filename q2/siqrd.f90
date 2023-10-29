@@ -3,7 +3,7 @@ program siqrd
     implicit none 
 
     ! following character contains the name of the method we will be using 
-    character, parameter :: m = 'b' ! f = forward euler, b = backward euler, h= heun
+    character, parameter :: m = 'f' ! f = forward euler, b = backward euler, h= heun
 
     real, parameter :: step = T/N !time step between grid points
     real, dimension(N+1) :: grid !array of size N+1 containg grid points on [0,T]
@@ -35,11 +35,14 @@ program siqrd
     do i = 2, N+1
         if(m == 'f') then 
             call forward(sol(:,i-1),sol(:,i))
+            !print *,abs(sum(sol(:,i)) - sum(sol(:,1))) <= 1e-3
         elseif(m == 'h') then 
             call heun(sol(:,i-1), sol(:,i))
+            !print *,abs(sum(sol(:,i)) - sum(sol(:,1))) <= 1e-3
         elseif(m == 'b') then 
-            print *, "iteration",i
             call backward(sol(:,i-1),sol(:,i))
+            !print *,abs(sum(sol(:,i)) - sum(sol(:,1))) <= 1e-3
+
         else 
             print *, "method m is not recognized"
             exit

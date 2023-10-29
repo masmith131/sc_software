@@ -14,7 +14,7 @@ program infections_exp2
     
     ! we call the function to compute the number of infections 
     result = predicted_infections(r_exp2,d,i) ! use r_exp2 or r_exp3
-    ! print '(es20.10, 1x, a)', result, "is the result of number of infections"
-    print *, result 
+    print '(es20.10, 1x, a)', result, "is the result of number of infections"
+    !print *, result 
     
 end program 

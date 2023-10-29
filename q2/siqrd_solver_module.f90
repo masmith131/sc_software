@@ -5,7 +5,7 @@ module siqrd_solver
 
     real :: beta, mu, gamma, alpha, delta
     real, parameter, public :: T = 30.0 ! simulation horizon 
-    integer, parameter, public  :: N = 150 ! N +1:  number of grid points in time interval [0,T]
+    integer, parameter, public  :: N = 150  ! N +1:  number of grid points in time interval [0,T]
 
     contains
 
@@ -19,8 +19,8 @@ module siqrd_solver
         beta = param(1)  ! infection rate 
         mu = param(2)    ! the rate at which immune people become again susceptible
         gamma = param(3) ! recovery rate 
-        alpha = param(4) ! rate at which infected people get tested
-        delta = param(5) ! death rate 
+        alpha = param(4) ! death rate 
+        delta = param(5) ! rate at which infected people get quarantined
     end subroutine setting_parameters
     
     ! ===============================================================================================
@@ -110,6 +110,7 @@ module siqrd_solver
         integer, parameter :: max_it = 100 !maximum number of iterations of newton for one step
         integer i
 
+        Id = 0.0
         !Identity Matrix
         do i = 1,5
             Id(i,i) = 1.0
@@ -142,7 +143,7 @@ module siqrd_solver
             xk1 = xk1 - prod ! now xk1 contains x_(k+1)^(s+1)
 
             !backward error stopping criteria
-            if(norm2(be) < 1.0e-6) return 
+            if(norm2(be) < 1.0e-3) return 
 
         enddo 
     end subroutine 

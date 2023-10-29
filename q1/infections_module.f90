@@ -19,6 +19,6 @@ module infections
         real(select_p), intent(in) :: r, d
         integer, intent(in) :: i0 
         real(select_p) :: id 
-        id = (1+r)**d * i0 ! computing infections according to the model 
+        id = (1+r)**d*i0 ! computing infections according to the model 
     end function 
 end module
