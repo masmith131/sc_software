@@ -19,7 +19,7 @@ program infections_exp1
     ! catch problems 
     if (i < 0 .or. int(i) /= i) then 
         print *,"ERROR: the number of initial infections is invalid"
-    elseif(d < 0 .or. int(d) /= d) then 
+    elseif(d < 0) then 
         print *, "ERROR: the number of days is invalid"
     elseif(abs(r) > 1) then 
         print *,"ERROR: rate is invalid"
