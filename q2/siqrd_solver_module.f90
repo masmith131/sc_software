@@ -11,9 +11,9 @@ module siqrd_solver
     integer, parameter, public :: s_ip = selected_int_kind(10)
     integer, parameter, public :: select_ip = s_ip
 
-    real(select_p) :: beta, mu, gamma, alpha, delta
-    real(select_p), parameter, public :: T = 30.0 ! simulation horizon 
-    integer(select_ip), parameter, public  :: N = 150  ! N +1:  number of grid points in time interval [0,T]
+    real(select_p) :: beta, mu, gamma, alpha, delta 
+    real(select_p) :: T ! simulation horizon 
+    integer(select_ip) :: N ! N +1:  number of grid points in time interval [0,T]
 
     contains
 
@@ -21,14 +21,17 @@ module siqrd_solver
     ! subroutine: setting_parameters
     ! sets the global varibales that correspond to parameters of the siqrd model 
     ! ===============================================================================================
-    subroutine setting_parameters(param)
-        real(select_p), intent(in) :: param(5)
+    subroutine setting_parameters(param, arg1, arg2) 
+        real(select_p), intent(in) :: param(5), arg1
+        integer(select_ip), intent(in) :: arg2 
         ! param = (beta, mu, gamma, alpha, delta)
         beta = param(1)  ! infection rate 
         mu = param(2)    ! the rate at which immune people become again susceptible
         gamma = param(3) ! recovery rate 
         alpha = param(4) ! death rate 
         delta = param(5) ! rate at which infected people get quarantined
+        T = arg1 
+        N = arg2 
     end subroutine setting_parameters
     
     ! ===============================================================================================

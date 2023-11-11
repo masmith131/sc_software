@@ -1,7 +1,7 @@
 FC=gfortran
 
 all: siqrd 
-	./siqrd
+	./siqrd 30.0 150
 
 siqrd_solver_module.o: siqrd_solver_module.f90 solver_gfortran.mod
 	$(FC) -o siqrd_solver_module.o -c siqrd_solver_module.f90
