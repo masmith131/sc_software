@@ -19,3 +19,10 @@ make clean: removes executables and object files
 !! to change solving method go to line 6 of 'siqrd.f90'
 !! to change parameters change them in 'parameters.in' 
 !! to change number of steps and time horizon go to line 7 and 8 of 'siqrd_solver_module'
+
+
+
+CORRECTION 
+always put kind ... for selected precision 
+prove correctness by analyzing rate of convergence etc 
+use relative error rather than absolute 

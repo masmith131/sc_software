@@ -3,13 +3,13 @@ program siqrd
     implicit none 
 
     ! following character contains the name of the method we will be using 
-    character, parameter :: m = 'f' ! f = forward euler, b = backward euler, h= heun
+    character, parameter :: m = 'h' ! f = forward euler, b = backward euler, h= heun
 
-    real, parameter :: step = T/N !time step between grid points
-    real, dimension(N+1) :: grid !array of size N+1 containg grid points on [0,T]
-    real, dimension(7) :: input ! stores the input read from 'parameters.in'
-    real, dimension(5,N+1) :: sol ! stores the solution at each time step 
-    integer i,j
+    real(select_p), parameter :: step = T/N !time step between grid points
+    real(select_p), dimension(N+1) :: grid !array of size N+1 containg grid points on [0,T]
+    real(select_p), dimension(7) :: input ! stores the input read from 'parameters.in'
+    real(select_p), dimension(5,N+1) :: sol ! stores the solution at each time step 
+    integer(select_ip) i,j
 
     ! fill in array containg grid points 
     grid(1) = 0.0
