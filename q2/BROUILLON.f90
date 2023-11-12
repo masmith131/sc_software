@@ -248,3 +248,37 @@
     8.22831E+01   2.42344E-30  -6.21797E-36   2.06517E+01   2.06517E+00  
     8.22831E+01   1.51346E-30  -3.88318E-36   2.06517E+01   2.06517E+00 
 
+
+
+    FC=gfortran
+
+# Flags for g95 that you might also want to use with gfortran
+FFLAGS=-g -pedantic -Wall -fbounds-check 
+
+all: siqrd 
+	./siqrd 30.0 150
+
+test: test_solver
+	./test_solver
+
+solver_module.o: solver_module.f90
+	$(FC) -o solver_module.o -c solver_module.f90
+
+test_solver.o: test_solver.f90 solver_module.o
+	$(FC) $(FFLAGS) -c test_solver.f90 -o test_solver.o
+
+test_solver: test_solver.o solver_module.o
+	$(FC) -o test_solver test_solver.o solver_module.o $(FFLAGS) -llapack -lblas
+
+
+siqrd_solver_module.o: siqrd_solver_module.f90 solver.mod
+	$(FC) -o siqrd_solver_module.o -c siqrd_solver_module.f90
+
+siqrd.o: siqrd.f90 siqrd_solver_module.o
+	$(FC) $(FFLAGS) -o siqrd.o -c siqrd.f90
+
+siqrd: siqrd.o siqrd_solver_module.o
+	$(FC) -o siqrd siqrd.o solver_module.o siqrd_solver_module.o $(FFLAGS) -llapack -lblas
+
+clean:
+	@ rm -f siqrd.o siqrd_solver_module.o solver_module.o test_solver.o siqrd_solver.mod siqrd test_solver

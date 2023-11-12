@@ -1,19 +1,17 @@
 module siqrd_solver
 
-    use solver_gfortran 
+    ! use solver_gfortran
+    use solver  
     implicit none 
 
-    ! we define single and double precision to easily switch between both 
-    integer, parameter :: s_p = kind(1.0) ! single precision 
-    integer, parameter :: d_p = kind(1.0d0)  ! double precision 
-    ! following line to change for different precision 
-    integer, parameter, public :: select_p=s_p ! set select_p to the desired precision (sp or dp)
-    integer, parameter, public :: s_ip = selected_int_kind(10)
-    integer, parameter, public :: select_ip = s_ip
-
-    real(select_p) :: beta, mu, gamma, alpha, delta 
-    real(select_p) :: T ! simulation horizon 
-    integer(select_ip) :: N ! N +1:  number of grid points in time interval [0,T]
+    ! integer, parameter :: s_p = kind(1.0) ! single precision 
+    ! integer, parameter :: d_p = kind(1.0d0)  ! double precision 
+    ! ! following line to change for different precision 
+    ! integer, parameter, public :: wp=d_p ! set select_p to the desired precision (sp or dp)
+    
+    real(wp) :: beta, mu, gamma, alpha, delta 
+    real(wp) :: T ! simulation horizon 
+    integer :: N ! N +1:  number of grid points in time interval [0,T]
 
     contains
 
@@ -22,8 +20,8 @@ module siqrd_solver
     ! sets the global varibales that correspond to parameters of the siqrd model 
     ! ===============================================================================================
     subroutine setting_parameters(param, arg1, arg2) 
-        real(select_p), intent(in) :: param(5), arg1
-        integer(select_ip), intent(in) :: arg2 
+        real(wp), intent(in) :: param(5), arg1
+        integer, intent(in) :: arg2 
         ! param = (beta, mu, gamma, alpha, delta)
         beta = param(1)  ! infection rate 
         mu = param(2)    ! the rate at which immune people become again susceptible
@@ -40,8 +38,8 @@ module siqrd_solver
     ! based on the SIQRD models 
     ! ================================================================================================
     subroutine func(xk, fx)
-        real(select_p), dimension(5), intent(in) :: xk ! xk = (s(t), i(t), q(t), r(t), d(t)), point at which evalutate the function
-        real(select_p), dimension(5), intent(out) :: fx ! to store output of time derivates of the 5 functions at xk
+        real(wp), dimension(5), intent(in) :: xk ! xk = (s(t), i(t), q(t), r(t), d(t)), point at which evalutate the function
+        real(wp), dimension(5), intent(out) :: fx ! to store output of time derivates of the 5 functions at xk
 
         ! xk = (s(t), i(t), q(t), r(t), d(t))
         ! fx = (s'(t),i'(t),q'(t),r'(t),d'(t))
@@ -59,8 +57,8 @@ module siqrd_solver
     ! ===============================================================================================
 
     subroutine jacob(xk, dfdx)
-        real(select_p), dimension(5), intent(in) :: xk ! xk = (s(t), i(t), q(t), r(t), d(t)), point at which evalutate the jacobian
-        real(select_p), dimension(5,5), intent(out) :: dfdx  ! dfdx: 5x5 matrix that will store the jacobian 
+        real(wp), dimension(5), intent(in) :: xk ! xk = (s(t), i(t), q(t), r(t), d(t)), point at which evalutate the jacobian
+        real(wp), dimension(5,5), intent(out) :: dfdx  ! dfdx: 5x5 matrix that will store the jacobian 
 
         dfdx = 0.0
         ! computing all non zero entries of the jacobian 
@@ -85,9 +83,9 @@ module siqrd_solver
     ! following Euler's forward scheme 
     ! ============================================================================
     subroutine forward(xk,xk1)
-        real(select_p), dimension(5), intent(in) :: xk ! x_k the solution at time step k 
-        real(select_p), dimension(5), intent(out) :: xk1 !xk1 the solution at time step k+1
-        real(select_p), dimension(5) :: fx ! f(x_k)
+        real(wp), dimension(5), intent(in) :: xk ! x_k the solution at time step k 
+        real(wp), dimension(5), intent(out) :: xk1 !xk1 the solution at time step k+1
+        real(wp), dimension(5) :: fx ! f(x_k)
         call func(xk, fx)
         xk1 = xk + T/N * fx
     end subroutine 
@@ -98,13 +96,13 @@ module siqrd_solver
     ! following Heun's scheme 
     ! ============================================================================    
     subroutine heun(xk, xk1) 
-        real(select_p), dimension(5), intent(in) :: xk ! x_k the solution at time step k 
-        real(select_p), dimension(5), intent(out) :: xk1 !xk1 the solution at time step k+1
-        real(select_p), dimension(5) ::  fx, xkt, fxt! f(x_k), x_k + T/N f(x_k), f(x_k + T/N f(x_k))
+        real(wp), dimension(5), intent(in) :: xk ! x_k the solution at time step k 
+        real(wp), dimension(5), intent(out) :: xk1 !xk1 the solution at time step k+1
+        real(wp), dimension(5) ::  fx, xkt, fxt! f(x_k), x_k + T/N f(x_k), f(x_k + T/N f(x_k))
         call func(xk, fx)
         xkt = xk + T/N*fx
         call func(xkt, fxt)
-        xk1 = xk + T/N * (0.5 * fx + 0.5 * fxt)     
+        xk1 = xk + T/N * (0.5_wp * fx + 0.5_wp * fxt)     
     end subroutine 
 
     ! ===========================================================================
@@ -113,19 +111,19 @@ module siqrd_solver
     ! following Euler's backward scheme 
     ! ============================================================================  
     subroutine backward(xk,xk1)
-        real(select_p), dimension(5), intent(in) :: xk ! x_k the solution at time step k 
-        real(select_p), dimension(5), intent(out) :: xk1!xk1 the solution at time step k+1
-        real(select_p), dimension(5) :: fx(5), be(5), prod(5) ! f(x_k+1^(s+1)), corresponds to the last term of newton or the backward error 
-        real(select_p), dimension(5,5) :: dfdx, Id !dfdx will contain the matrix term and Id the identity 5 by 5 
-        real(select_p), parameter :: rtol = 1e-5
+        real(wp), dimension(5), intent(in) :: xk ! x_k the solution at time step k 
+        real(wp), dimension(5), intent(out) :: xk1!xk1 the solution at time step k+1
+        real(wp), dimension(5) :: fx(5), be(5), prod(5) ! f(x_k+1^(s+1)), corresponds to the last term of newton or the backward error 
+        real(wp), dimension(5,5) :: dfdx, Id !dfdx will contain the matrix term and Id the identity 5 by 5 
+        real(wp), parameter :: rtol = 1e-5
 
-        integer(select_ip), parameter :: max_it = 100 !maximum number of iterations of newton for one step
-        integer(select_ip) i
+        integer, parameter :: max_it = 100 !maximum number of iterations of newton for one step
+        integer i
 
-        Id = 0.0
+        Id = 0.0_wp
         !Identity Matrix
         do i = 1,5
-            Id(i,i) = 1.0
+            Id(i,i) = 1.0_wp
         enddo
 
         ! initial guess set to xk

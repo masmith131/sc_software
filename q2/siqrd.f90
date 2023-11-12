@@ -2,18 +2,18 @@ program siqrd
     use siqrd_solver 
     implicit none 
 
-    character, parameter :: m = 'h' !name of the method :  f = forward euler, b = backward euler, h= heun
-    real(select_p) :: step !time step between grid points
-    real(select_p) :: argT! simulation horizon
-    integer(select_ip) :: argN ! N +1:  number of grid points in time interval [0,T]
-    integer(select_ip) :: num_args ! number of arguments passed in command line 
+    character, parameter :: m = 'b' !name of the method :  f = forward euler, b = backward euler, h= heun
+    real(wp) :: step !time step between grid points
+    real(wp) :: argT! simulation horizon
+    integer :: argN ! N +1:  number of grid points in time interval [0,T]
+    integer :: num_args ! number of arguments passed in command line 
     character(len = 32) :: arg1, arg2
 
-    real(select_p), allocatable :: sol(:,:)
-    real(select_p), allocatable :: grid(:)
+    real(wp), allocatable :: sol(:,:)
+    real(wp), allocatable :: grid(:)
 
-    real(select_p), dimension(7) :: input ! stores the input read from 'parameters.in'
-    integer(select_ip) i,j, flag1, flag2
+    real(wp), dimension(7) :: input ! stores the input read from 'parameters.in'
+    integer i,j, flag1, flag2
 
     ! getting T and N from the command line
     num_args = command_argument_count()
@@ -33,7 +33,7 @@ program siqrd
     allocate(grid(argN+1),stat = flag1) !array of size N+1 containg grid points on [0,T]
     allocate(sol(5, argN+1), stat = flag2) ! stores the solution at each time step 
     if(flag1 /= 0 .or. flag2 /= 0) print *, "Problem with allocation of grid or sol"
-    step = argT/real(argN, select_p)
+    step = argT/real(argN, wp)
     print *, step
 
     ! fill in array containg grid points 
@@ -49,7 +49,7 @@ program siqrd
 
     ! xk = (s(t), i(t), q(t), r(t), d(t)), corresponds to one row of sol 
     ! filling in x0
-    sol(:,1) = 0.0
+    sol(:,1) = 0.0_wp
     sol(1,1) = input(6) ! s0
     sol(2,1) = input(7) ! i0
 
