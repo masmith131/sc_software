@@ -23,6 +23,16 @@ make clean: removes executables and object files
 
 
 CORRECTION 
-always put kind ... for selected precision 
-prove correctness by analyzing rate of convergence etc 
-use relative error rather than absolute 
+LEFT TO DO FOR PART 1 
+- find out if kind needs to be put for integers if when we use double precision we also need double integer precision 
+- make sure everything is defined in correct precision 
+- check comments in report about this part (that everything is alligned with what is done in code)
+
+PROGRESS 
+thoughts for function iq 
+- should method be global var/ argument / defined in the function ? 
+- is the beta0 the one given in parameters.in ? or not necessarily 
+- should i0 and s0 be global varibales ? 
+next up: 
+- in tweaking compute f(beta) and f(beta+deltab) and then update the b0 ... 
+- think about deltab and about stopping criteria 

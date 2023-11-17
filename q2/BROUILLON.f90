@@ -282,3 +282,7 @@ siqrd: siqrd.o siqrd_solver_module.o
 
 clean:
 	@ rm -f siqrd.o siqrd_solver_module.o solver_module.o test_solver.o siqrd_solver.mod siqrd test_solver
+
+
+
+    

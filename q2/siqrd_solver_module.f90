@@ -11,7 +11,8 @@ module siqrd_solver
     
     real(wp) :: beta, mu, gamma, alpha, delta 
     real(wp) :: T ! simulation horizon 
-    integer :: N ! N +1:  number of grid points in time interval [0,T]
+    integer (wip):: N ! N +1:  number of grid points in time interval [0,T]
+    real(wp) :: S0, I0
 
     contains
 
@@ -19,17 +20,20 @@ module siqrd_solver
     ! subroutine: setting_parameters
     ! sets the global varibales that correspond to parameters of the siqrd model 
     ! ===============================================================================================
-    subroutine setting_parameters(param, arg1, arg2) 
-        real(wp), intent(in) :: param(5), arg1
-        integer, intent(in) :: arg2 
+    subroutine setting_parameters(param, x0, arg1, arg2) 
+        real(wp), intent(in) :: param(5), x0(2), arg1
+        integer(wip), intent(in) :: arg2 
         ! param = (beta, mu, gamma, alpha, delta)
         beta = param(1)  ! infection rate 
         mu = param(2)    ! the rate at which immune people become again susceptible
         gamma = param(3) ! recovery rate 
         alpha = param(4) ! death rate 
         delta = param(5) ! rate at which infected people get quarantined
+        S0 = x0(1)
+        I0 = x0(2)
         T = arg1 
         N = arg2 
+
     end subroutine setting_parameters
     
     ! ===============================================================================================
@@ -115,9 +119,9 @@ module siqrd_solver
         real(wp), dimension(5), intent(out) :: xk1!xk1 the solution at time step k+1
         real(wp), dimension(5) :: fx(5), be(5), prod(5) ! f(x_k+1^(s+1)), corresponds to the last term of newton or the backward error 
         real(wp), dimension(5,5) :: dfdx, Id !dfdx will contain the matrix term and Id the identity 5 by 5 
-        real(wp), parameter :: rtol = 1e-5
+        real(wp), parameter :: rtol = 1e-15_wp
 
-        integer, parameter :: max_it = 100 !maximum number of iterations of newton for one step
+        integer, parameter :: max_it = 200 !maximum number of iterations of newton for one step
         integer i
 
         Id = 0.0_wp
@@ -157,6 +161,47 @@ module siqrd_solver
 
         enddo 
     end subroutine 
+
+    !------------------------------------------------------------------------------------------------------------
+    ! f = iq_max(b,s0,i0)
+    ! computes the maximum value of Ik + Qk for a given beta (b)
+    !-------------------------------------------------------------------------------------------------------------
+    
+    function iq_max(b, meth) result(f)
+        real(wp), intent(in) :: b  ! beta 
+        real(wp) :: f              ! will contain the result F(beta)
+        character :: meth             ! method used to find solution       
+        real(wp), dimension(N+1) :: solk  ! array to store solution at time step k 
+        real(wp), dimension(N+1) :: solk1 ! array to store solution at time step k+1
+        integer(wip) i
+
+        beta = b        ! computes I+Q as a function of the input b
+        
+        ! fill in solution at time step 0
+        solk  = 0.0_wp
+        solk(1) = S0
+        solk(2) = I0
+        f = I0
+
+        ! get solution at time k+1 from solution at time k using method 
+        do i = 2, N+1
+            if(meth == 'f') then 
+                call forward(solk, solk1)
+            elseif(meth == 'h') then 
+                call heun(solk, solk1)
+            elseif(meth == 'b') then 
+                call backward(solk, solk1)
+            else 
+                print *, "method m is not recognized"
+                exit
+            endif
+            if (f < (solk1(2)+solk1(3))) f =  (solk1(2)+solk1(3))
+
+            solk = solk1
+            solk1 = 0.0_wp
+        enddo
+
+    end function 
 
 
 end module siqrd_solver

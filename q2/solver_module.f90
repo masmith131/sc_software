@@ -5,6 +5,9 @@ module solver
     integer, parameter :: d_p = kind(1.0d0)  ! double precision 
     ! following line to change for different precision 
     integer, parameter, public :: wp=d_p ! set select_p to the desired precision (sp or dp)
+    integer, parameter :: s_ip = selected_int_kind(9)
+    integer, parameter :: d_ip = selected_int_kind(15)
+    integer, parameter, public :: wip = d_ip 
     
     contains
 
