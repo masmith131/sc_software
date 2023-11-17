@@ -4,19 +4,19 @@ program tweaking
 
     integer :: num_args ! number of arguments passed in command line 
     character(len = 32) :: arg1, arg2, arg3, arg4 ! arguments of command line 
-    real(wp) :: argT
-    real(wp) :: deltaB
-    integer(wip) :: argN
-    integer(wip) :: maxInf
+    real(wp) :: argT   ! simulation horizon
+    real(wp) :: deltaB !delta_Beta value for FD approximation
+    integer :: argN    ! N +1:  number of grid points in time interval [0,T]
+    integer :: maxInf  !the target = Maximal number of Infections
     real(wp), dimension(7) :: input ! stores the input read from 'parameters.in'
-    real(wp) optiB
+    real(wp) optiB !optimal Beta
+    integer iter 
 
     ! variables for timing 
-    real(wp), dimension(9) :: times
+    ! real(wp), dimension(9) :: times
     real(wp) :: t1, t2
-    integer i 
-    integer iter
-    real(wp) time
+    ! integer i 
+    ! real(wp) time
 
     ! get N,T,deltaB, maxInf from command line
     num_args = command_argument_count()
@@ -32,12 +32,7 @@ program tweaking
     read(arg2,*)argT
     read(arg3,*)deltaB
     read(arg4,*)maxInf
-
-    print *, 'N = ', argN
-    print *, 'T = ', argT
-    print *, 'deltaB = ', deltaB
-    print *, 'maxInf = ', maxInf ! target 
-    
+   
     ! getting parameters and s0, i0 from the input file 
     open(unit = 32,file = 'parameters.in')
     read(32,*) input
@@ -46,49 +41,49 @@ program tweaking
     ! set parameters 
     call setting_parameters(input(:5), input(6:), argT, argN)
 
-    print *, "beta", beta
-    print *, "mu", mu
-    print *, "gamma", gamma
-    print *, "alpha", alpha
-    print *, "delta", delta 
-    print *, "S0", S0
-    print *, "I0", I0
+    ! WHEN DOING TIMINGS
+    ! do i = 1, 9
+    !     optiB = input(1)
+    !     call cpu_time(t1)
+    !     call newton(optiB)
+    !     call cpu_time(t2)
+    !     times(i) = t2-t1
+    !     print *, optiB
+    !     print *, iter 
+    ! enddo
+    ! print *, times
+    ! time =  median(times)
+    ! print *, time
 
-    
-    do i = 1, 9
-        optiB = input(1)
-        call cpu_time(t1)
-        call newton(optiB)
-        call cpu_time(t2)
-        times(i) = t2-t1
-        print *, optiB
-        print *, iter 
-    enddo
-    print *, times
-    time =  median(times)
-    print *, "optimal beta", optiB
-    print *, time
-
+    call cpu_time(t1)
+    optiB = input(1)
+    call newton(optiB)
+    print *, "number of Newton iterations", iter
+    print *, "optimal beta: ", optiB
+    call cpu_time(t2)
+    t2 = t2 -t1
+    print *,"cpu_time: ", t2
 
     contains 
 
-    function median(times) result(m)
-        real(wp), dimension(9) :: times
-        integer i, j
-        real(wp) temp, m
-        ! Simple bubble sort to order the times array
-        do i = 1, 8
-            do j = i+1, 9
-                if (times(i) > times(j)) then
-                    temp = times(i)
-                    times(i) = times(j)
-                    times(j) = temp
-                end if
-            end do
-        end do
-        m = times(5)
+    ! WHEN DOING TIMINGS
+    ! function median(times) result(m)
+    !     real(wp), dimension(9) :: times
+    !     integer i, j
+    !     real(wp) temp, m
+    !     ! Simple bubble sort to order the times array
+    !     do i = 1, 8
+    !         do j = i+1, 9
+    !             if (times(i) > times(j)) then
+    !                 temp = times(i)
+    !                 times(i) = times(j)
+    !                 times(j) = temp
+    !             end if
+    !         end do
+    !     end do
+    !     m = times(5)
 
-    end function 
+    ! end function 
 
     !----------------------------------------------------------------------------------------------------------------
     ! f = fun(b)
@@ -101,20 +96,24 @@ program tweaking
         real(wp), intent(in) :: b  ! beta 
         real(wp) :: f  ! will contain the result F(beta)
         character :: meth = 'h' ! method used to solve siqrd system ('f': forward Euler, 'b': backward euler, 'h': heun)    
-
+        ! call a function of beta here 
         f = iq_max(b, meth)
     end function 
 
-
+    !---------------------------------------------------------------------------------------------------
+    ! newton(B) performs Newton's method on variable beta 
+    ! for function of beta: fun(b)
+    ! result in B 
+    !----------------------------------------------------------------------------------------------------
     subroutine newton(B)
         real(wp), intent(inout) :: B ! variable beta 
 
-        real(wp) :: B_next
+        real(wp) :: B_next ! Beta at next step of newton 
         real(wp) :: f_b ! F(beta)
         real(wp) :: f_bd ! F(beta + delta_beta)
         real(wp) :: dfdb ! finite difference approx of F'(beta)
-        integer, parameter :: max_it = 200 
-        real(wp), parameter :: rtol = 1e-15_wp
+        integer, parameter :: max_it = 200       ! maximum number of iterations to avoid infinite loops
+        real(wp), parameter :: rtol = 1e-15_wp   ! relative tolerance for stopping criteria 
         real(wp), parameter :: eps = 1e-15_wp    ! shouldn't divide by smaller value 
 
         do iter = 0, max_it       
@@ -125,22 +124,13 @@ program tweaking
                 print *, "Derivative(denominator) is too small"
                 exit 
             endif 
-
             B_next = B - (f_b - maxInf)/dfdb   !One step of Newton's Method 
 
-            ! ! stop criteria 
+            !stop criteria 
             if(abs(B_next - B) < rtol * abs(B)) then 
                 B = B_next
-                !print *, "number of iterations", iter
                 exit 
             endif 
-
-            ! if(abs(f_b - maxInf) < rtol * maxInf) then 
-            !     B = B_next
-            !     print *, "number of iterations", i
-            !     print *, f_b
-            !     exit 
-            ! endif
 
             B = B_next 
         enddo 

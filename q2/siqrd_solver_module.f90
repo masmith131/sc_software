@@ -11,7 +11,7 @@ module siqrd_solver
     
     real(wp) :: beta, mu, gamma, alpha, delta 
     real(wp) :: T ! simulation horizon 
-    integer (wip):: N ! N +1:  number of grid points in time interval [0,T]
+    integer :: N ! N +1:  number of grid points in time interval [0,T]
     real(wp) :: S0, I0
 
     contains
@@ -22,7 +22,7 @@ module siqrd_solver
     ! ===============================================================================================
     subroutine setting_parameters(param, x0, arg1, arg2) 
         real(wp), intent(in) :: param(5), x0(2), arg1
-        integer(wip), intent(in) :: arg2 
+        integer, intent(in) :: arg2 
         ! param = (beta, mu, gamma, alpha, delta)
         beta = param(1)  ! infection rate 
         mu = param(2)    ! the rate at which immune people become again susceptible
@@ -173,7 +173,7 @@ module siqrd_solver
         character :: meth             ! method used to find solution       
         real(wp), dimension(N+1) :: solk  ! array to store solution at time step k 
         real(wp), dimension(N+1) :: solk1 ! array to store solution at time step k+1
-        integer(wip) i
+        integer i
 
         beta = b        ! computes I+Q as a function of the input b
         
